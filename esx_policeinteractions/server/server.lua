@@ -1,104 +1,106 @@
--- server.lua
 local function GetPlayer(source)
     return exports.ox_core:GetPlayer(source)
 end
 
-RegisterServerEvent('esx_policeinteractions:handcufftargetid')
-AddEventHandler('esx_policeinteractions:handcufftargetid', function(targetid, playerheading, playerCoords, playerlocation)
+RegisterServerEvent('policeinteractions:handcufftargetid')
+AddEventHandler('policeinteractions:handcufftargetid', function(targetid, playerheading, playerCoords, playerlocation)
     local _source = source
-    TriggerClientEvent('esx_policeinteractions:targetcloseplayer', targetid, playerheading, playerCoords, playerlocation)
-    TriggerClientEvent('esx_policeinteractions:player', _source)
+    TriggerClientEvent('policeinteractions:targetcloseplayer', targetid, playerheading, playerCoords, playerlocation)
+    TriggerClientEvent('policeinteractions:player', _source)
 end)
 
-RegisterServerEvent('esx_policeinteractions:allunlockcuff')
-AddEventHandler('esx_policeinteractions:allunlockcuff', function(targetid, playerheading, playerCoords, playerlocation)
+RegisterServerEvent('policeinteractions:allunlockcuff')
+AddEventHandler('policeinteractions:allunlockcuff', function(targetid, playerheading, playerCoords, playerlocation)
     local _source = source
     local player = GetPlayer(_source)
 
-    TriggerClientEvent('esx_policeinteractions:getuncuffed', targetid, playerheading, playerCoords, playerlocation)
-    TriggerClientEvent('esx_policeinteractions:douncuffing', _source)
+    TriggerClientEvent('policeinteractions:getuncuffed', targetid, playerheading, playerCoords, playerlocation)
+    TriggerClientEvent('policeinteractions:douncuffing', _source)
     exports.ox_inventory:AddItem(_source, 'handcuff', 1)
 end)
 
-RegisterServerEvent('esx_policeinteractions:feetunlockcuff')
-AddEventHandler('esx_policeinteractions:feetunlockcuff', function(targetid, playerheading, playerCoords, playerlocation)
+RegisterServerEvent('policeinteractions:feetunlockcuff')
+AddEventHandler('policeinteractions:feetunlockcuff', function(targetid, playerheading, playerCoords, playerlocation)
     local _source = source
     local player = GetPlayer(_source)
 
-    TriggerClientEvent('esx_policeinteractions:getuncuffed', targetid, playerheading, playerCoords, playerlocation)
-    TriggerClientEvent('esx_policeinteractions:douncuffing', _source)
+    TriggerClientEvent('policeinteractions:getuncuffed', targetid, playerheading, playerCoords, playerlocation)
+    TriggerClientEvent('policeinteractions:douncuffing', _source)
     exports.ox_inventory:AddItem(_source, 'footcuff', 1)
 end)
 
-RegisterServerEvent('esx_policeinteractions:requestarrest')
-AddEventHandler('esx_policeinteractions:requestarrest', function(targetid, playerheading, playerCoords, playerlocation)
+RegisterServerEvent('policeinteractions:requestarrest')
+AddEventHandler('policeinteractions:requestarrest', function(targetid, playerheading, playerCoords, playerlocation)
     local _source = source
-    TriggerClientEvent('esx_policeinteractions:getarrested', targetid, playerheading, playerCoords, playerlocation)
-    TriggerClientEvent('esx_policeinteractions:doarrested', _source)
+    TriggerClientEvent('policeinteractions:getarrested', targetid, playerheading, playerCoords, playerlocation)
+    TriggerClientEvent('policeinteractions:doarrested', _source)
 end)
 
-RegisterServerEvent("esx_policeinteractions:removehandcuff")
-AddEventHandler("esx_policeinteractions:removehandcuff", function(Target)
+RegisterServerEvent("policeinteractions:removehandcuff")
+AddEventHandler("policeinteractions:removehandcuff", function()
     local _source = source
     local count = exports.ox_inventory:GetItem(_source, 'handcuff', nil, true)
     
-    if count >= 1 then
+    if count and count >= 1 then
         exports.ox_inventory:RemoveItem(_source, 'handcuff', 1)
-        TriggerClientEvent('esx_policeinteractions:re', _source)
+        TriggerClientEvent('policeinteractions:re', _source)
     else
-        TriggerClientEvent('esx_policeinteractions:uncuff', _source)
+        TriggerClientEvent('policeinteractions:uncuff', _source)
     end
 end)
 
-RegisterServerEvent("esx_policeinteractions:removefeetcuff")
-AddEventHandler("esx_policeinteractions:removefeetcuff", function(Target)
+RegisterServerEvent("policeinteractions:removefeetcuff")
+AddEventHandler("policeinteractions:removefeetcuff", function()
     local _source = source
     local count = exports.ox_inventory:GetItem(_source, 'footcuff', nil, true)
     
-    if count >= 1 then
+    if count and count >= 1 then
         exports.ox_inventory:RemoveItem(_source, 'footcuff', 1)
-        TriggerClientEvent('esx_policeinteractions:ft', _source)
+        TriggerClientEvent('policeinteractions:ft', _source)
     else
-        TriggerClientEvent('esx_policeinteractions:uncufffeet', _source)
+        TriggerClientEvent('policeinteractions:uncufffeet', _source)
     end
 end)
 
-RegisterServerEvent('esx_policeinteractions:attachPlayer', function(who, anim)
+RegisterServerEvent('policeinteractions:attachPlayer')
+AddEventHandler('policeinteractions:attachPlayer', function(who, anim)
     local _source = source
-    TriggerClientEvent('esx_policeinteractions:doAnimation', _source, anim)
-    TriggerClientEvent('esx_policeinteractions:getDragged', who, _source, anim)
+    TriggerClientEvent('policeinteractions:doAnimation', _source, anim)
+    TriggerClientEvent('policeinteractions:getDragged', who, _source, anim)
 end)
 
-RegisterNetEvent('esx_policeinteractions:putInVehicle')
-AddEventHandler('esx_policeinteractions:putInVehicle', function(target)
+RegisterNetEvent('policeinteractions:putInVehicle')
+AddEventHandler('policeinteractions:putInVehicle', function(target)
     local _source = source
     local player = GetPlayer(_source)
 
-    if player.getGroup() == 'police' then
-        TriggerClientEvent('esx_policeinteractions:putInVehicle', target)
-    end
-end)
-
-RegisterNetEvent('esx_policeinteractions:OutVehicle')
-AddEventHandler('esx_policeinteractions:OutVehicle', function(target)
-    local _source = source
-    local player = GetPlayer(_source)
-
-    if player.getGroup() == 'police' then
-        TriggerClientEvent('esx_policeinteractions:OutVehicle', target)
+    if player and player.groups and player.groups.police then
+        TriggerClientEvent('policeinteractions:putInVehicle', target)
     else
-        print(('[^3WARNING^7] Player ^5%s^7 Attempted To Exploit Dragging Out Of Vehicle!'):format(_source))
+        print(('[^3WARNING^7] Player ^5%s^7 Attempted To Exploit Put In Vehicle!'):format(_source))
     end
 end)
 
-RegisterNetEvent('esx_policeinteractions:sech')
-AddEventHandler('esx_policeinteractions:sech', function(target)
+RegisterNetEvent('policeinteractions:OutVehicle')
+AddEventHandler('policeinteractions:OutVehicle', function(target)
     local _source = source
     local player = GetPlayer(_source)
 
-    if player.getGroup() == 'police' then
-        TriggerClientEvent('esx_policeinteractions:sech', target)
+    if player and player.groups and player.groups.police then
+        TriggerClientEvent('policeinteractions:OutVehicle', target)
     else
         print(('[^3WARNING^7] Player ^5%s^7 Attempted To Exploit Dragging Out Of Vehicle!'):format(_source))
+    end
+end)
+
+RegisterNetEvent('policeinteractions:sech')
+AddEventHandler('policeinteractions:sech', function(target)
+    local _source = source
+    local player = GetPlayer(_source)
+
+    if player and player.groups and player.groups.police then
+        TriggerClientEvent('policeinteractions:sech', target)
+    else
+        print(('[^3WARNING^7] Player ^5%s^7 Attempted To Exploit Search!'):format(_source))
     end
 end)
