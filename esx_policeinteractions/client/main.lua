@@ -2,25 +2,36 @@ local ox_inventory = exports.ox_inventory
 local playerLoaded = false
 local playerGroups = {}
 
--- OX Core events
+-- Variables locales
+local isEscorting = false 
+local isAttached = false
+local Tonyhandecuff = false
+local Tonyfeetcuff = false
+local cuffObj = nil
+local dragnotify = nil
+local sechde = false
+
+-- Événements OX Core
 RegisterNetEvent('ox:playerLoaded', function()
     playerLoaded = true
     local player = exports.ox_core:GetPlayer()
     if player then
         playerGroups = player.groups or {}
     end
+    print('^2[policeinteractions]^7 Player loaded')
 end)
 
 RegisterNetEvent('ox:playerLogout', function()
     playerLoaded = false
     playerGroups = {}
+    print('^2[policeinteractions]^7 Player logged out')
 end)
 
 RegisterNetEvent('ox:setGroup', function(group, grade)
     playerGroups[group] = grade
 end)
 
--- Get closest player function for OX
+-- Fonction pour obtenir le joueur le plus proche
 function GetClosestPlayer()
     local players = GetActivePlayers()
     local closestDistance = -1
@@ -46,14 +57,7 @@ function GetClosestPlayer()
     return -1, -1
 end
 
-local isEscorting = false 
-local isAttached = false
-local Tonyhandecuff = false
-local Tonyfeetcuff = false
-local cuffObj
-local dragnotify = nil
-local sechde = false
-
+-- Fonctions d'animation
 function loadanimdict(dictname)
     if not HasAnimDictLoaded(dictname) then
         RequestAnimDict(dictname) 
@@ -70,51 +74,51 @@ function LoadAnimDict(dict)
     end
 end
 
--- Police interactions
+-- Interactions police
 local policeinteractions = {
     {
         name = 'policeinteractions:handcuff',
         event = 'policeinteractions:handcuff',
         icon = 'fa-solid fa-handcuffs',
-        label = 'HandCuff / uncuff', 
+        label = TranslateCap('HandCuff_uncuff'), 
         canInteract = function(entity, distance, coords, name, bone)
-            return not IsEntityDead(entity) and playerGroups.police
+            return not IsEntityDead(entity) and playerGroups.police and distance <= 2.0
         end
     },
     {
         name = 'policeinteractions:feetcuff',
         event = 'policeinteractions:feetcuff',
         icon = 'fa-solid fa-handcuffs',
-        label = 'FeetCuff / uncuff', 
+        label = TranslateCap('FeetCuff_uncuff'), 
         canInteract = function(entity, distance, coords, name, bone)
-            return not IsEntityDead(entity) and playerGroups.police
+            return not IsEntityDead(entity) and playerGroups.police and distance <= 2.0
         end
     },
     {
         name = 'policeinteractions:escort',
         event = 'policeinteractions:escort',
         icon = 'fa-solid fa-hand',
-        label = 'Darg', 
+        label = TranslateCap('Darg'), 
         canInteract = function(entity, distance, coords, name, bone)
-            return not IsEntityDead(entity) and playerGroups.police
+            return not IsEntityDead(entity) and playerGroups.police and distance <= 2.0
         end
     },
     {
         name = 'policeinteractions:sechce',
         event = 'policeinteractions:sechce',
         icon = 'fa-solid fa-magnifying-glass',
-        label = 'Sechce', 
+        label = TranslateCap('Sechce'), 
         canInteract = function(entity, distance, coords, name, bone)
-            return not IsEntityDead(entity) and playerGroups.police
+            return not IsEntityDead(entity) and playerGroups.police and distance <= 2.0
         end
     },
     {
         name = 'policeinteractions:putInVehiclece',
         event = 'policeinteractions:putInVehiclece',
         icon = 'fa-regular fa-square-plus', 
-        label = 'PutInVehiclece', 
+        label = TranslateCap('PutInVehiclece'), 
         canInteract = function(entity, distance, coords, name, bone)
-            return not IsEntityDead(entity) and playerGroups.police
+            return not IsEntityDead(entity) and playerGroups.police and distance <= 2.0
         end
     } 
 }
@@ -124,14 +128,14 @@ local policecarinteractions = {
         name = 'policeinteractions:OutVehiclece',
         event = 'policeinteractions:OutVehiclece',
         icon = 'fa-regular fa-square-minus',
-        label = 'OutVehiclece', 
+        label = TranslateCap('OutVehiclece'), 
         canInteract = function(entity, distance, coords, name, bone)
-            return not IsEntityDead(entity) and playerGroups.police
+            return playerGroups.police and distance <= 5.0
         end
     }
 }
 
--- Add target options
+-- Ajouter les options de target
 CreateThread(function()
     while not playerLoaded do
         Wait(1000)
@@ -139,9 +143,10 @@ CreateThread(function()
     
     exports.ox_target:addGlobalPlayer(policeinteractions)
     exports.ox_target:addGlobalVehicle(policecarinteractions)
+    print('^2[policeinteractions]^7 Target interactions loaded')
 end)
 
--- Handcuff Events
+-- Événements pour les menottes
 RegisterNetEvent('policeinteractions:handcuff')
 AddEventHandler('policeinteractions:handcuff', function()
     local target, distance = GetClosestPlayer()
@@ -150,7 +155,7 @@ AddEventHandler('policeinteractions:handcuff', function()
     else
         lib.notify({
             title = 'Error',
-            description = 'No player nearby',
+            description = TranslateCap('no_player_nearby'),
             type = 'error'
         })
     end
@@ -165,6 +170,11 @@ AddEventHandler('policeinteractions:re', function()
     
     if target and distance <= 2.0 then
         TriggerServerEvent('policeinteractions:handcufftargetid', target, playerheading, playerCoords, playerlocation)
+        lib.notify({
+            title = 'Success',
+            description = TranslateCap('handcuff_applied'),
+            type = 'success'
+        })
     end
 end)
 
@@ -204,6 +214,12 @@ AddEventHandler('policeinteractions:targetcloseplayer', function(playerheading, 
     DisablePlayerFiring(playerPed, true)
     SetCurrentPedWeapon(playerPed, `WEAPON_UNARMED`, true) 
     SetPedCanPlayGestureAnims(playerPed, false)
+
+    lib.notify({
+        title = 'Info',
+        description = TranslateCap('handcuff_applied'),
+        type = 'inform'
+    })
 end)
 
 RegisterNetEvent('policeinteractions:player')
@@ -214,7 +230,7 @@ AddEventHandler('policeinteractions:player', function()
     Wait(3000)
 end)
 
--- Uncuff Events
+-- Événements pour enlever les menottes
 RegisterNetEvent('policeinteractions:uncuff')
 AddEventHandler('policeinteractions:uncuff', function()
     local target, distance = GetClosestPlayer()
@@ -224,6 +240,12 @@ AddEventHandler('policeinteractions:uncuff', function()
     
     if target and distance <= 2.0 then
         TriggerServerEvent('policeinteractions:allunlockcuff', target, playerheading, playerCoords, playerlocation)
+    else
+        lib.notify({
+            title = 'Error',
+            description = TranslateCap('no_player_nearby'),
+            type = 'error'
+        })
     end
 end)
 
@@ -236,6 +258,12 @@ AddEventHandler('policeinteractions:uncufffeet', function()
     
     if target and distance <= 2.0 then
         TriggerServerEvent('policeinteractions:feetunlockcuff', target, playerheading, playerCoords, playerlocation)
+    else
+        lib.notify({
+            title = 'Error',
+            description = TranslateCap('no_player_nearby'),
+            type = 'error'
+        })
     end
 end)
 
@@ -246,6 +274,12 @@ AddEventHandler('policeinteractions:douncuffing', function()
     TaskPlayAnim(cache.ped, 'mp_arresting', 'a_uncuff', 8.0, -8, -1, 2, 0, 0, 0, 0)
     Wait(5500)
     ClearPedTasks(cache.ped)
+    
+    lib.notify({
+        title = 'Success',
+        description = TranslateCap('handcuff_removed'),
+        type = 'success'
+    })
 end)
 
 RegisterNetEvent('policeinteractions:getuncuffed')
@@ -272,9 +306,15 @@ AddEventHandler('policeinteractions:getuncuffed', function(playerheading, player
         DeleteEntity(cuffObj)
         cuffObj = nil
     end
+
+    lib.notify({
+        title = 'Info',
+        description = TranslateCap('handcuff_removed'),
+        type = 'inform'
+    })
 end)
 
--- Feet Cuff Events
+-- Événements pour les entraves
 RegisterNetEvent('policeinteractions:feetcuff')
 AddEventHandler('policeinteractions:feetcuff', function()
     local target, distance = GetClosestPlayer()
@@ -283,7 +323,7 @@ AddEventHandler('policeinteractions:feetcuff', function()
     else
         lib.notify({
             title = 'Error',
-            description = 'No player nearby',
+            description = TranslateCap('no_player_nearby'),
             type = 'error'
         })
     end
@@ -298,6 +338,11 @@ AddEventHandler('policeinteractions:ft', function()
     
     if target and distance <= 2.0 then
         TriggerServerEvent('policeinteractions:requestarrest', target, playerheading, playerCoords, playerlocation)
+        lib.notify({
+            title = 'Success',
+            description = TranslateCap('legcuff_applied'),
+            type = 'success'
+        })
     end
 end)
 
@@ -337,6 +382,12 @@ AddEventHandler('policeinteractions:getarrested', function(playerheading, player
 
     cuffObj = CreateObject(hash, coords, true, false)
     AttachEntityToEntity(cuffObj, playerPed, GetPedBoneIndex(playerPed, 60309), -0.055, 0.06, 0.04, 265.0, 155.0, 80.0, true, false, false, false, 0, true)
+
+    lib.notify({
+        title = 'Info',
+        description = TranslateCap('legcuff_applied'),
+        type = 'inform'
+    })
 end)
 
 RegisterNetEvent('policeinteractions:doarrested')
@@ -347,13 +398,13 @@ AddEventHandler('policeinteractions:doarrested', function()
     Wait(3000)
 end)
 
--- Escort System
+-- Système d'escorte
 CreateThread(function()
     while true do
         local sleep = 1000
         if isEscorting and not dragnotify then
             sleep = 0
-            lib.showTextUI('[G] - Stop Dragging', {icon = 'hand'})
+            lib.showTextUI(TranslateCap('StopDargging'), {icon = 'hand'})
             
             if IsControlJustPressed(0, 47) then -- G key
                 dragnotify = true
@@ -362,6 +413,11 @@ CreateThread(function()
                 if closestPlayer then
                     TriggerServerEvent('policeinteractions:attachPlayer', closestPlayer, 'escort')
                 end
+                lib.notify({
+                    title = 'Info',
+                    description = TranslateCap('escort_stopped'),
+                    type = 'inform'
+                })
             end
         elseif dragnotify then
             Wait(1000)
@@ -372,7 +428,7 @@ CreateThread(function()
     end
 end)
 
--- Control Disabling Thread
+-- Désactivation des contrôles quand menotté
 CreateThread(function()
     while true do
         local sleep = 1000
@@ -419,7 +475,7 @@ CreateThread(function()
                 DisableControlAction(0, 30, true) -- D
             end
 
-            -- Ensure animations continue playing
+            -- Assurer que les animations continuent de jouer
             if Tonyfeetcuff and IsEntityPlayingAnim(cache.ped, 'mp_arresting', 'idle', 3) ~= 1 then
                 LoadAnimDict('mp_arresting')
                 TaskPlayAnim(cache.ped, 'mp_arresting', 'idle', 8.0, -8, -1, 49, 0.0, false, false, false)
@@ -434,16 +490,21 @@ CreateThread(function()
     end
 end)
 
--- Escort Commands
+-- Commandes d'escorte
 RegisterNetEvent('policeinteractions:escort')
 AddEventHandler('policeinteractions:escort', function()
     local closestPlayer = GetClosestPlayer()
     if closestPlayer then
         TriggerServerEvent('policeinteractions:attachPlayer', closestPlayer, 'escort')
+        lib.notify({
+            title = 'Info',
+            description = TranslateCap('being_escorted'),
+            type = 'inform'
+        })
     else
         lib.notify({
             title = 'Error',
-            description = 'No player nearby',
+            description = TranslateCap('no_player_nearby'),
             type = 'error'
         })
     end
@@ -498,7 +559,7 @@ function amBeingEscorted(entID)
     end)
 end
 
--- Search System
+-- Système de fouille
 RegisterNetEvent('policeinteractions:sechce')
 AddEventHandler('policeinteractions:sechce', function()
     local closestPlayer = GetClosestPlayer()
@@ -506,7 +567,7 @@ AddEventHandler('policeinteractions:sechce', function()
     if closestPlayer then
         if lib.progressBar({
             duration = 5000,
-            label = 'Searching',
+            label = TranslateCap('searching_player'),
             useWhileDead = false,
             canCancel = true,
             disable = { car = true },
@@ -517,11 +578,16 @@ AddEventHandler('policeinteractions:sechce', function()
         }) then
             OpenBodySearchMenu(closestPlayer)
             TriggerServerEvent('policeinteractions:sech', closestPlayer)
+            lib.notify({
+                title = 'Success',
+                description = TranslateCap('player_searched'),
+                type = 'success'
+            })
         end
     else
         lib.notify({
             title = 'Error',
-            description = 'No player nearby',
+            description = TranslateCap('no_player_nearby'),
             type = 'error'
         })
     end
@@ -540,7 +606,7 @@ function OpenBodySearchMenu(player)
     exports.ox_inventory:openInventory('player', player)
 end
 
--- Vehicle Interactions
+-- Interactions véhicule
 RegisterNetEvent('policeinteractions:putInVehiclece')
 AddEventHandler('policeinteractions:putInVehiclece', function()
     local closestPlayer = GetClosestPlayer()
@@ -549,7 +615,7 @@ AddEventHandler('policeinteractions:putInVehiclece', function()
     else
         lib.notify({
             title = 'Error',
-            description = 'No player nearby',
+            description = TranslateCap('no_player_nearby'),
             type = 'error'
         })
     end
@@ -575,14 +641,14 @@ AddEventHandler('policeinteractions:putInVehicle', function()
         else
             lib.notify({
                 title = 'Error',
-                description = 'No free seats in vehicle',
+                description = TranslateCap('no_free_seats'),
                 type = 'error'
             })
         end
     else
         lib.notify({
             title = 'Error',
-            description = 'No vehicle nearby',
+            description = TranslateCap('no_vehicle_nearby'),
             type = 'error'
         })
     end
@@ -596,7 +662,7 @@ AddEventHandler('policeinteractions:OutVehiclece', function()
     else
         lib.notify({
             title = 'Error',
-            description = 'No player nearby',
+            description = TranslateCap('no_player_nearby'),
             type = 'error'
         })
     end
@@ -610,7 +676,7 @@ AddEventHandler('policeinteractions:OutVehicle', function()
     end
 end)
 
--- Utility function to get closest vehicle
+-- Fonction utilitaire pour obtenir le véhicule le plus proche
 function GetClosestVehicle()
     local vehicles = GetGamePool('CVehicle')
     local closestDistance = -1
@@ -629,3 +695,22 @@ function GetClosestVehicle()
 
     return closestVehicle, closestDistance
 end
+
+-- Nettoyage quand la resource s'arrête
+AddEventHandler('onResourceStop', function(resourceName)
+    if GetCurrentResourceName() == resourceName then
+        if cuffObj then
+            DeleteEntity(cuffObj)
+        end
+        lib.hideTextUI()
+        print('^2[policeinteractions]^7 Resource stopped - cleaned up')
+    end
+end)
+
+-- Log quand le client est prêt
+CreateThread(function()
+    while not playerLoaded do
+        Wait(1000)
+    end
+    print('^2[policeinteractions]^7 Client script started successfully')
+end)
