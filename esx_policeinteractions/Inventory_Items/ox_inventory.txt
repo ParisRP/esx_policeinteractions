@@ -1,14 +1,16 @@
-	["handcuff"] = {
-		label = "handcuff",
-		weight = 10,
-		stack = true,
-		close = true,
-		
-	},
-	["footcuff"] = {
-		label = "footcuff",
-		weight = 10,
-		stack = true,
-		close = true,
-		
-	},
+-- In ox_inventory/data/items.lua
+
+['handcuff'] = {
+    label = TranslateCap('handcuff_item'),
+    weight = 100,
+    stack = true,
+    close = true,
+    description = TranslateCap('handcuff_description')
+},
+['footcuff'] = {
+    label = TranslateCap('footcuff_item'),
+    weight = 100,
+    stack = true,
+    close = true,
+    description = TranslateCap('footcuff_description')
+},
